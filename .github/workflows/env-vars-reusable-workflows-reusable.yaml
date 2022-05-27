@@ -26,23 +26,15 @@ jobs:
         shell: bash
         run: |
           echo "${{ inputs.environment-vars }}" >> $GITHUB_ENV
-      - name: Mask stuff
+      - name: Mask secret values
         shell: bash
         run: |
           while IFS= read -r line; do
             export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
             export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
-            echo "mask '${SECRET_VALUE}'"
+            echo "masking ${SECRET_NAME}"
+            echo "::add-mask::${SECRET_VALUE}'"
           done <<< "${{ secrets.secret-environment-vars }}"
-      - name: Mask secret values
-        shell: bash
-        run: |
-          for line in "${{ secrets.secret-environment-vars }}"; do
-            export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
-            export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
-            echo ::debug::Saving ${SECRET_NAME}
-            echo ::add-mask::${SECRET_VALUE}
-          done
       - name: Persist secret environment variables in file
         shell: bash
         run: |
