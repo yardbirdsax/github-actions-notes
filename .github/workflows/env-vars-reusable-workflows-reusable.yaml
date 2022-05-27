@@ -31,8 +31,9 @@ jobs:
         run: |
           for line in "${{ secrets.secret-environment-vars }}"; do
             export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
+            export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
             echo ::debug::Saving ${SECRET_NAME}
-            echo ::add-mask::$SECRET_VALUE
+            echo ::add-mask::${SECRET_VALUE}
           done
       - name: Persist secret environment variables in file
         shell: bash
