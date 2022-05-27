@@ -10,3 +10,7 @@ jobs:
       environment-vars: |
         MY_VARIABLE=something
         MY_OTHER_VARIBLE=somethingelse
+    secrets:
+      secret-environment-vars: |
+        MY_SECRET=secret1
+        MY_OTHER_SECRET=secret2

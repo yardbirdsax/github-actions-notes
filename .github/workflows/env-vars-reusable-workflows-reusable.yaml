@@ -13,6 +13,10 @@ on:
           SOMETHING_ELSE=someothervalue
           ```
         required: true
+    secrets:
+      secret-environment-vars:
+        description: A line separated list of environment variables that should be treated as secrets.
+        required: false
 jobs:
   inject-env:
     runs-on: ubuntu-latest
@@ -22,6 +26,14 @@ jobs:
         shell: bash
         run: |
           echo "${{ inputs.environment-vars }}" >> $GITHUB_ENV
+      - name: Persist secret values
+        shell: bash
+        run: |
+          for line in "${{ secrets.secret-environment-vars }}"; do
+            export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
+            echo ::add-mask::$SECRET_VALUE
+            echo $line >> $GITHUB_ENV
+          done
       - name: Show environment variables
         shell: bash
         run: env | sort
