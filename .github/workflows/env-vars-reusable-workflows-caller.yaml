@@ -1,0 +1,12 @@
+name: Env vars in reusable workflows - caller
+on:
+  push:
+    paths:
+      - .github/workflows/env-vars-reusable-workflows*
+jobs:
+  call:
+    uses: ./.github/workflows/env-vars-reusable-workflows-reusable.yaml
+    with:
+      environment-vars: |
+        MY_VARIABLE=something
+        MY_OTHER_VARIBLE=somethingelse

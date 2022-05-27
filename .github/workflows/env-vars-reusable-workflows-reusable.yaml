@@ -1,0 +1,27 @@
+on:
+  workflow_call:
+    inputs:
+      environment-vars:
+        type: string
+        description: >
+          A line separated list of environment variable names and values which
+          will be injected into the workflow environment.
+
+          Example:
+          ```
+          SOMETHING=value
+          SOMETHING_ELSE=someothervalue
+          ```
+        required: true
+jobs:
+  inject-env:
+    runs-on: ubuntu-latest
+    name: Test injection of environment variables
+    steps:
+      - name: Persist environment variables in file
+        shell: bash
+        run: |
+          echo "${{ inputs.environment-vars }}" >> $GITHUB_ENV
+      - name: Show environment variables
+        shell: bash
+        run: env | sort
