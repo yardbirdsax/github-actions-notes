@@ -34,6 +34,7 @@ jobs:
         id: check-secrets-exists
         shell: bash
         run:  |
+          set -eo pipefail
           if [ -z "${{secrets.secret-environment-vars }}"]; then
             echo "::set-ouput name=secrets-present::true"
           fi
