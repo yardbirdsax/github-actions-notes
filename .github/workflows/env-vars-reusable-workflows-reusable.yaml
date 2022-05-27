@@ -35,10 +35,12 @@ jobs:
             echo "masking ${SECRET_NAME}"
             echo "::add-mask::${SECRET_VALUE}"
           done <<< "${{ secrets.secret-environment-vars }}"
+        if: secrets.secret-environment-vars != ""
       - name: Persist secret environment variables in file
         shell: bash
         run: |
           echo "${{ secrets.secret-environment-vars }}" >> $GITHUB_ENV
+        if: secrets.secret-environment-vars != ""
       - name: Show environment variables
         shell: bash
         run: env | sort
