@@ -12,5 +12,5 @@ jobs:
         MY_OTHER_VARIBLE=somethingelse
     secrets:
       secret-environment-vars: |
-        MY_SECRET=secret1
-        MY_OTHER_SECRET=secret2
+        SECRET=secret1
+        SECRET_OTHER=secret2
