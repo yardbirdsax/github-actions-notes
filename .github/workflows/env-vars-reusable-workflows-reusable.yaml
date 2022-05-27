@@ -26,6 +26,10 @@ jobs:
         shell: bash
         run: |
           echo "${{ inputs.environment-vars }}" >> $GITHUB_ENV
+      # This is necessary because the following 'if' block doesn't work. It complains about a non
+      # existent 'secret' object.
+      # Error: Unrecognized named-value: 'secrets'.
+      # if: ${{ secrets.secret-environment-vars != "" }}
       - name: Check for secret values
         id: check-secrets-exists
         shell: bash
@@ -42,7 +46,7 @@ jobs:
             echo "masking ${SECRET_NAME}"
             echo "::add-mask::${SECRET_VALUE}"
           done <<< "${{ secrets.secret-environment-vars }}"
-        if: ${{ secrets.secret-environment-vars != "" }}
+        if: ${{ steps.check-secrets-exists.outputs.secrets-present }}
       - name: Persist secret environment variables in file
         shell: bash
         run: |
