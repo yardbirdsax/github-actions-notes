@@ -26,6 +26,13 @@ jobs:
         shell: bash
         run: |
           echo "${{ inputs.environment-vars }}" >> $GITHUB_ENV
+      - name: Check for secret values
+        id: check-secrets-exists
+        shell: bash
+        run:  |
+          if [ -z "${{secrets.secret-environment-vars }}"]; then
+            echo "::set-ouput name=secrets-present::yes"
+          fi
       - name: Mask secret values
         shell: bash
         run: |
@@ -35,10 +42,12 @@ jobs:
             echo "masking ${SECRET_NAME}"
             echo "::add-mask::${SECRET_VALUE}"
           done <<< "${{ secrets.secret-environment-vars }}"
+        if: steps.check-secrets-exists.outputs.secrets-present == "yes"
       - name: Persist secret environment variables in file
         shell: bash
         run: |
           echo "${{ secrets.secret-environment-vars }}" >> $GITHUB_ENV
+        if: steps.check-secrets-exists.outputs.secrets-present == "yes"
       - name: Show environment variables
         shell: bash
         run: env | sort
