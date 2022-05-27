@@ -35,8 +35,8 @@ jobs:
         shell: bash
         run:  |
           set -eo pipefail
-          if [ -z "${{secrets.secret-environment-vars }}" ]; then
-            echo "::set-ouput name=secrets-present::true"
+          if [ -n "${{secrets.secret-environment-vars }}" ]; then
+            echo "::set-output name=secrets-present::true"
           fi
       - name: Mask secret values
         shell: bash
