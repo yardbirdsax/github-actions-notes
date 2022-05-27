@@ -30,6 +30,8 @@ jobs:
         shell: bash
         run: |
           for line in "${{ secrets.secret-environment-vars }}"; do
+            export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
+            echo ::debug::Saving ${SECRET_NAME}
             export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
             echo ::add-mask::$SECRET_VALUE
             echo $line >> $GITHUB_ENV
