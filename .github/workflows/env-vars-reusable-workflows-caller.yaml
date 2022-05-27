@@ -14,3 +14,9 @@ jobs:
       secret-environment-vars: |
         SECRET=secret1
         SECRET_OTHER=secret2
+  call-no-secrets:
+    uses: ./.github/workflows/env-vars-reusable-workflows-reusable.yaml
+    with:
+      environment-vars: |
+        MY_VARIABLE=something
+        MY_OTHER_VARIBLE=somethingelse
