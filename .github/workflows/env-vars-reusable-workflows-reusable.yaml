@@ -26,16 +26,18 @@ jobs:
         shell: bash
         run: |
           echo "${{ inputs.environment-vars }}" >> $GITHUB_ENV
-      - name: Persist secret values
+      - name: Mask secret values
         shell: bash
         run: |
           for line in "${{ secrets.secret-environment-vars }}"; do
             export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
             echo ::debug::Saving ${SECRET_NAME}
-            export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
             echo ::add-mask::$SECRET_VALUE
-            echo $line >> $GITHUB_ENV
           done
+      - name: Persist secret environment variables in file
+        shell: bash
+        run: |
+          echo "${{ secrets.secret-environment-vars }}" >> $GITHUB_ENV
       - name: Show environment variables
         shell: bash
         run: env | sort
