@@ -29,11 +29,11 @@ jobs:
       - name: Mask stuff
         shell: bash
         run: |
-          while read -r line; do
+          while IFS= read -r line; do
             export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
             export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
             echo "mask '${SECRET_VALUE}'"
-          done < echo "${{ secrets.secret-environment-vars }}"
+          done <<< "${{ secrets.secret-environment-vars }}"
       - name: Mask secret values
         shell: bash
         run: |
