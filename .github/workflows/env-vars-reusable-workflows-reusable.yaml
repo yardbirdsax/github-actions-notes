@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           echo "${{ secrets.secret-environment-vars }}" >> $GITHUB_ENV
-        if: secrets.secret-environment-vars != ""
+        if: ${{ secrets.secret-environment-vars }} != ""
       - name: Show environment variables
         shell: bash
         run: env | sort
