@@ -42,10 +42,12 @@ jobs:
         shell: bash
         run: |
           while IFS= read -r line; do
-            export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
-            export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
-            echo "masking ${SECRET_NAME}"
-            echo "::add-mask::${SECRET_VALUE}"
+            if [ -n "$line" ]; then
+              export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
+              export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
+              echo "masking ${SECRET_NAME}"
+              echo "::add-mask::${SECRET_VALUE}"
+            fi
           done <<< "${{ secrets.secret-environment-vars }}"
         if: ${{ steps.check-secrets-exists.outputs.secrets-present }}
       - name: Persist secret environment variables in file
