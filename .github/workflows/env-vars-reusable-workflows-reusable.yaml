@@ -26,6 +26,14 @@ jobs:
         shell: bash
         run: |
           echo "${{ inputs.environment-vars }}" >> $GITHUB_ENV
+      - name: Mask stuff
+        shell: bash
+        run: |
+          for line in "${{ secrets.secret-environment-vars }}"; do
+            export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
+            export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
+            echo "mask ${SECRET_VALUE}"
+          done;
       - name: Mask secret values
         shell: bash
         run: |
