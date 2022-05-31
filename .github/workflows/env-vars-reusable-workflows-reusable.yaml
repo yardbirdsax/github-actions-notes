@@ -43,8 +43,8 @@ jobs:
         run: |
           while IFS= read -r line; do
             if [ -n "$line" ]; then
-              export SECRET_NAME=$(echo $line | cut -f 1 -d"=")
-              export SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
+              SECRET_NAME=$(echo $line | cut -f 1 -d"=")
+              SECRET_VALUE=$(echo $line | cut -f 2 -d"=")
               echo "masking ${SECRET_NAME}"
               echo "::add-mask::${SECRET_VALUE}"
             fi
