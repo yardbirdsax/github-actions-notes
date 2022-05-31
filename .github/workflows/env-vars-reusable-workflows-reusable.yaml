@@ -49,12 +49,12 @@ jobs:
               echo "::add-mask::${SECRET_VALUE}"
             fi
           done <<< "${{ secrets.secret-environment-vars }}"
-        if: ${{ steps.check-secrets-exists.outputs.secrets-present }}
+        if: ${{ secrets && secrets.secret-environment-vars }}
       - name: Persist secret environment variables in file
         shell: bash
         run: |
           echo "${{ secrets.secret-environment-vars }}" >> $GITHUB_ENV
-        if: ${{ steps.check-secrets-exists.outputs.secrets-present }}
+        if: ${{ secrets && secrets.secret-environment-vars }}
       - name: Show environment variables
         shell: bash
         run: env | sort
