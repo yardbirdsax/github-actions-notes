@@ -1,0 +1,34 @@
+name: Distributed Example Callee Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      delay_time:
+        description: The time in seconds to delay the workflow run.
+        type: string
+        default: "5"
+      result:
+        description: The desired result of the workflow run.
+        type: choice
+        options:
+          - "succeed"
+          - "fail"
+        default: "succeed"
+jobs:
+  job:
+    name: Execute callee workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delay for delay time
+        shell: bash
+        run: sleep ${{ inputs.delay_time }}
+      - name: Result
+        shell: bash
+        run: |
+          RESULT="${{ inputs.result }}"
+          if [ "$RESULT" == "failed" ]; then
+            echo "::error ::Failing workflow as instructed"
+            exit 1
+          else
+            echo "::info ::Finishing successfully as instructed"
+            exit 1
+          fi
