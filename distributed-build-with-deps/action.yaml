@@ -1,0 +1,16 @@
+name: Distributed Builds
+description: A PoC for how to do distributes, parallel builds with dependencies in GitHub Actions.
+inputs:
+  matrix:
+    description: >
+      A JSON array of job definitions.
+runs:
+  using: composite
+  steps:
+    - name: setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version-file: ../go.mod
+    - name: execute
+      shell: bash
+      run: go run ${{ github.action_path }}/cmd/main.go
