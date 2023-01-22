@@ -3,11 +3,16 @@ package distributed
 
 import (
 	"context"
+	"fmt"
 	"sync"
+	"time"
+
+	"github.com/hashicorp/go-multierror"
 )
 
 type Action struct {
 	Matrix         []*Job `json:"matrix"`
+  ConcurrentJobs int `json:"concurrent_jobs"`
 	workflowRunner WorkflowRunner
   // Receives jobs that should be run
   runChannel chan(*Job)
@@ -16,9 +21,40 @@ type Action struct {
 }
 
 func (a *Action) Run() error {
+  a.runChannel = make(chan *Job, a.ConcurrentJobs)
   // Start goroutine to update jobs and send ready ones back to queue
+  go func() {
+   for {
+    select {
+    case <- a.ctx.Done():
+      return
+    case <- time.After(time.Second):
+      a.UpdateJobs()
+      a.SendJobsForRun()
+    }
+   }
+  }()
   // Start goroutines to pull jobs off queue and run them
+  for i := 1; i <= a.ConcurrentJobs; i++ {
+    go func() {
+      for {
+        select {
+        case job := <- a.runChannel:
+          a.runJob(job)
+        case <- a.ctx.Done():
+          return
+        }
+      }
+    }()
+  }
   // Wait for completion
+  for {
+    select {
+    case <- a.ctx.Done():
+      break
+
+    }
+  }
 
 	return nil
 }
@@ -137,6 +173,18 @@ func (a *Action) GetJobCountByState() map[JobState]int {
   return result
 }
 
+// error returns a MultiError of all job's Error properties
+func (a *Action) error() error {
+  err := &multierror.Error{}
+  for _, j := range a.Matrix {
+    if j.Error != nil {
+      newError := fmt.Errorf("error running job with name %s: %w", j.Name, j.Error)
+      err = multierror.Append(err, newError)
+    }
+  }
+  return err.ErrorOrNil()
+}
+
 type JobState int
 
 const (
@@ -156,5 +204,6 @@ type Job struct {
 	State             JobState `json:"state"`
 	WorkflowName      string   `json:"workflow_name"`
 	Inputs            map[string]interface{}
+  Error             error
   mu                sync.Mutex
 }

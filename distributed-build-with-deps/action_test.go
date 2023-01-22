@@ -1,10 +1,13 @@
 package distributed
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/assert"
 	"github.com/yardbirdsax/github-actions-notes/distributed-build-with-deps/mock"
 	"github.com/yardbirdsax/go-ghworkflow"
@@ -250,4 +253,66 @@ func TestGetJobCountByState(t *testing.T) {
   actualResults := a.GetJobCountByState()
 
   assert.Equal(t, expectedResults, actualResults)
+}
+
+func TestErrors(t *testing.T) {
+  testCases := []struct{
+    Name string
+    Matrix []*Job
+    ExpectedError *multierror.Error
+  }{
+    {
+      Name: "WithErrors",
+      ExpectedError: &multierror.Error{
+        Errors: []error{
+          fmt.Errorf("error running job with name JobWithError: %w", errors.New("an error")),
+          fmt.Errorf("error running job with name AnotherJobWithError: %w", errors.New("another error")),
+        },
+      },
+      Matrix: []*Job{
+        {
+          Name: "JobWithError",
+          Error: errors.New("an error"),
+        },
+        {
+          Name: "AnotherJobWithError",
+          Error: errors.New("another error"),
+        },
+      },
+    },
+    {
+      Name: "NoErrors",
+      ExpectedError: nil,
+      Matrix: []*Job{
+        {
+          Name: "JobWithError",
+          Error: nil,
+        },
+        {
+          Name: "AnotherJobWithError",
+          Error: nil,
+        },
+      },
+    },
+  }
+  for _, tc := range testCases {
+    tc := tc
+    t.Run(tc.Name, func(t *testing.T) {
+      t.Parallel()
+
+      a := &Action{
+        Matrix: tc.Matrix,
+      }
+
+      actualError := a.error()
+
+      if tc.ExpectedError != nil {
+        assert.Equal(t, tc.ExpectedError, actualError, "actual and expected error are different")
+      } else {
+        assert.Nil(t, actualError, "actual error was not expected nil")
+      }
+    })
+  }
+
+
 }
