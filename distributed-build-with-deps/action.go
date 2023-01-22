@@ -127,6 +127,16 @@ func (a *Action) SendJobsForRun() {
   }
 }
 
+// GetJobCountByState provides a map of job states and the number of jobs
+// currently in that state.
+func (a *Action) GetJobCountByState() map[JobState]int {
+  result := make(map[JobState]int)
+  for _, j := range a.Matrix {
+    result[j.State]++
+  }
+  return result
+}
+
 type JobState int
 
 const (

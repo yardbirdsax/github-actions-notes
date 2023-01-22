@@ -223,3 +223,31 @@ func TestSendJobsForRun(t *testing.T) {
     t.Fail()
   }
 }
+
+func TestGetJobCountByState(t *testing.T) {
+  a := &Action{
+    Matrix: []*Job{
+      {
+        Name: "Ready",
+        State: Ready,
+      },
+      {
+        Name: "Queued",
+        State: Queued,
+      },
+      {
+        Name: "NotStarted",
+        State: NotStarted,
+      },
+    },
+  }
+  expectedResults := map[JobState]int{
+    NotStarted: 1,
+    Ready: 1,
+    Queued: 1,
+  }
+
+  actualResults := a.GetJobCountByState()
+
+  assert.Equal(t, expectedResults, actualResults)
+}
