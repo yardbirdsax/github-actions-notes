@@ -17,57 +17,54 @@ func (a *Action) Run() error {
 }
 
 func (a *Action) UpdateJobs() {
-	outerJobs:
   for i := range a.Matrix {
 		job := a.Matrix[i]
-    job.mu.Lock()
 
-    // We only care about updating jobs that haven't started, since
-    // all other states are either final (like in the case of failed,
-    // dependency failed, or succeeded) or managed elsewhere (like Ready
-    // or Running).
-    if job.State != NotStarted {
-      job.mu.Unlock()
-      continue outerJobs
-    }
+    func() {
+      job.mu.Lock()
+      defer job.mu.Unlock()
 
-    for _, depJobName := range job.DependentJobNames {
-      depJob := a.getJobByName(depJobName)
-
-      // If we can't find a dependent job, we need to mark
-      // the job as having a bad dependency and skip further processing.
-      if depJob == nil {
-        job.State = BadDependency
-        job.mu.Unlock()
-        continue outerJobs
+      // We only care about updating jobs that haven't started, since
+      // all other states are either final (like in the case of failed,
+      // dependency failed, or succeeded) or managed elsewhere (like Ready
+      // or Running).
+      if job.State != NotStarted {
+        return
       }
 
-      switch depJob.State {
-      // If successful, we don't do anything. If we get all the way through the loop
-      // then we'll set the job to a ready state.
-      case Succeeded:
-        continue
-      // If either the dependent job failed, or a dependency of the dependent job
-      // failed, then we can safely set this one to DependencyFailed and move on
-      // to the next available job.
-      case Failed:
-        job.State = DependencyFailed
-        job.mu.Unlock()
-        continue outerJobs
-      case DependencyFailed:
-        job.State = DependencyFailed
-        job.mu.Unlock()
-        continue outerJobs
-      // For the remainder of states, we don't need to do anything, but we know
-      // the job can't be marked as ready, so we can skip it.
-      default:
-        job.mu.Unlock()
-        continue outerJobs
+      for _, depJobName := range job.DependentJobNames {
+        depJob := a.getJobByName(depJobName)
+
+        // If we can't find a dependent job, we need to mark
+        // the job as having a bad dependency and skip further processing.
+        if depJob == nil {
+          job.State = BadDependency
+          return
+        }
+
+        switch depJob.State {
+        // If successful, we don't do anything. If we get all the way through the loop
+        // then we'll set the job to a ready state.
+        case Succeeded:
+          continue
+        // If either the dependent job failed, or a dependency of the dependent job
+        // failed, then we can safely set this one to DependencyFailed and move on
+        // to the next available job.
+        case Failed:
+          job.State = DependencyFailed
+          return
+        case DependencyFailed:
+          job.State = DependencyFailed
+          return
+        // For the remainder of states, we don't need to do anything, but we know
+        // the job can't be marked as ready, so we can skip it.
+        default:
+          return
+        }
       }
-		}
-    // If we got this far, then we can set the job state to Ready.
-    job.State = Ready
-    job.mu.Unlock()
+      // If we got this far, then we can set the job state to Ready.
+      job.State = Ready
+    }()
 	}
 }
 
