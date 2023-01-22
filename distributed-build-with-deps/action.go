@@ -105,6 +105,7 @@ func (a *Action) runJob(job *Job) {
 	}
 }
 
+// GetJobByState gets all jobs that have a particular State value.
 func (a *Action) GetJobByState(state JobState) []*Job {
   results := []*Job{}
 
@@ -117,11 +118,21 @@ func (a *Action) GetJobByState(state JobState) []*Job {
   return results
 }
 
+// SendJobsForRun sends ready jobs to the channel listened to by the
+// worker routines.
+func (a *Action) SendJobsForRun() {
+  for _, j := range a.GetJobByState(Ready) {
+    j.State = Queued
+    a.runChannel <- j
+  }
+}
+
 type JobState int
 
 const (
 	NotStarted JobState = iota
 	Ready
+  Queued
 	Started
 	Succeeded
 	Failed

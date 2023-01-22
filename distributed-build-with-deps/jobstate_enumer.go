@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-const _JobStateName = "NotStartedReadyStartedSucceededFailedDependencyFailed"
+const _JobStateName = "NotStartedReadyQueuedStartedSucceededFailedDependencyFailedBadDependency"
 
-var _JobStateIndex = [...]uint8{0, 10, 15, 22, 31, 37, 53}
+var _JobStateIndex = [...]uint8{0, 10, 15, 21, 28, 37, 43, 59, 72}
 
-const _JobStateLowerName = "notstartedreadystartedsucceededfaileddependencyfailed"
+const _JobStateLowerName = "notstartedreadyqueuedstartedsucceededfaileddependencyfailedbaddependency"
 
 func (i JobState) String() string {
 	if i < 0 || i >= JobState(len(_JobStateIndex)-1) {
@@ -27,36 +27,44 @@ func _JobStateNoOp() {
 	var x [1]struct{}
 	_ = x[NotStarted-(0)]
 	_ = x[Ready-(1)]
-	_ = x[Started-(2)]
-	_ = x[Succeeded-(3)]
-	_ = x[Failed-(4)]
-	_ = x[DependencyFailed-(5)]
+	_ = x[Queued-(2)]
+	_ = x[Started-(3)]
+	_ = x[Succeeded-(4)]
+	_ = x[Failed-(5)]
+	_ = x[DependencyFailed-(6)]
+	_ = x[BadDependency-(7)]
 }
 
-var _JobStateValues = []JobState{NotStarted, Ready, Started, Succeeded, Failed, DependencyFailed}
+var _JobStateValues = []JobState{NotStarted, Ready, Queued, Started, Succeeded, Failed, DependencyFailed, BadDependency}
 
 var _JobStateNameToValueMap = map[string]JobState{
 	_JobStateName[0:10]:       NotStarted,
 	_JobStateLowerName[0:10]:  NotStarted,
 	_JobStateName[10:15]:      Ready,
 	_JobStateLowerName[10:15]: Ready,
-	_JobStateName[15:22]:      Started,
-	_JobStateLowerName[15:22]: Started,
-	_JobStateName[22:31]:      Succeeded,
-	_JobStateLowerName[22:31]: Succeeded,
-	_JobStateName[31:37]:      Failed,
-	_JobStateLowerName[31:37]: Failed,
-	_JobStateName[37:53]:      DependencyFailed,
-	_JobStateLowerName[37:53]: DependencyFailed,
+	_JobStateName[15:21]:      Queued,
+	_JobStateLowerName[15:21]: Queued,
+	_JobStateName[21:28]:      Started,
+	_JobStateLowerName[21:28]: Started,
+	_JobStateName[28:37]:      Succeeded,
+	_JobStateLowerName[28:37]: Succeeded,
+	_JobStateName[37:43]:      Failed,
+	_JobStateLowerName[37:43]: Failed,
+	_JobStateName[43:59]:      DependencyFailed,
+	_JobStateLowerName[43:59]: DependencyFailed,
+	_JobStateName[59:72]:      BadDependency,
+	_JobStateLowerName[59:72]: BadDependency,
 }
 
 var _JobStateNames = []string{
 	_JobStateName[0:10],
 	_JobStateName[10:15],
-	_JobStateName[15:22],
-	_JobStateName[22:31],
-	_JobStateName[31:37],
-	_JobStateName[37:53],
+	_JobStateName[15:21],
+	_JobStateName[21:28],
+	_JobStateName[28:37],
+	_JobStateName[37:43],
+	_JobStateName[43:59],
+	_JobStateName[59:72],
 }
 
 // JobStateString retrieves an enum value from the enum constants string name.

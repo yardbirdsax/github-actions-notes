@@ -2,6 +2,7 @@ package distributed
 
 import (
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -187,4 +188,38 @@ func TestGetByState(t *testing.T) {
   actual := a.GetJobByState(Ready)
 
   assert.EqualValues(t, expected, actual)
+}
+
+func TestSendJobsForRun(t *testing.T) {
+  readyJob := &Job{
+    Name: "Ready",
+    State: Ready,
+  }
+  queuedJob := &Job{
+    Name: "Queued",
+    State: Queued,
+  }
+  a := &Action{
+    Matrix: []*Job{
+      readyJob,
+      queuedJob,
+    },
+    runChannel: make(chan *Job, 2),
+  }
+  expected := &Job{
+    Name: "Ready",
+    State: Queued,
+  }
+
+  a.SendJobsForRun()
+
+  var actual *Job
+
+  select {
+  case actual = <- a.runChannel:
+    assert.EqualValues(t, expected, actual, "expected value was not sent on channel")
+  case <- time.After(5 * time.Second):
+    t.Log("expected value not received in a timely manner")
+    t.Fail()
+  }
 }
