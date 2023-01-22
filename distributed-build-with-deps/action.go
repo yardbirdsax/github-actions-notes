@@ -1,11 +1,18 @@
 //go:generate go run github.com/dmarkham/enumer@v1.5.7 -type JobState -json
 package distributed
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 type Action struct {
 	Matrix         []*Job `json:"matrix"`
 	workflowRunner WorkflowRunner
+  // Receives jobs that should be run
+  runChannel chan(*Job)
+  // Used for cancelling or signaling to end all goroutines
+  ctx context.Context
 }
 
 func (a *Action) Run() error {
@@ -16,18 +23,27 @@ func (a *Action) Run() error {
 	return nil
 }
 
+// UpdateJobs reconciles job states based on dependencies.
 func (a *Action) UpdateJobs() {
   for i := range a.Matrix {
 		job := a.Matrix[i]
 
     func() {
-      job.mu.Lock()
-      defer job.mu.Unlock()
-
       // We only care about updating jobs that haven't started, since
       // all other states are either final (like in the case of failed,
       // dependency failed, or succeeded) or managed elsewhere (like Ready
-      // or Running).
+      // or Running). This is done outside the locked state to avoid
+      // cases where jobs that are currently running (and therefore locked)
+      // are checked, which would cause long delays.
+      if job.State != NotStarted {
+        return
+      }
+
+      job.mu.Lock()
+      defer job.mu.Unlock()
+
+      // This is an extra safety check in case the state was mutated between the initial
+      // check and the lock.
       if job.State != NotStarted {
         return
       }
@@ -87,6 +103,18 @@ func (a *Action) runJob(job *Job) {
 	case r.Error == nil:
 		job.State = Succeeded
 	}
+}
+
+func (a *Action) GetJobByState(state JobState) []*Job {
+  results := []*Job{}
+
+  for _, j := range a.Matrix {
+    if j.State == state {
+      results = append(results, j)
+    }
+  }
+
+  return results
 }
 
 type JobState int

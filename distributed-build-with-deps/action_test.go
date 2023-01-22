@@ -163,3 +163,28 @@ func TestRunJob(t *testing.T) {
 		})
 	}
 }
+
+func TestGetByState(t *testing.T) {
+  a := &Action{
+    Matrix: []*Job{
+      {
+        Name: "Ready",
+        State: Ready,
+      },
+      {
+        Name: "Failed",
+        State: Failed,
+      },
+    },
+  }
+  expected := []*Job{
+    {
+      Name: "Ready",
+      State: Ready,
+    },
+  }
+
+  actual := a.GetJobByState(Ready)
+
+  assert.EqualValues(t, expected, actual)
+}
