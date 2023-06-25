@@ -93,23 +93,23 @@ func TestUpdateJobs(t *testing.T) {
 				},
 			},
 		},
-    {
-      Name: "BadDependency",
-      Jobs: []*Job{
-        {
-          Name: "BadDependency",
-          State: NotStarted,
-          DependentJobNames: []string{ "NonExistentJob" },
-        },
-      },
-      ExpectedResults: []*Job{
-        {
-          Name: "BadDependency",
-          State: BadDependency,
-          DependentJobNames: []string{ "NonExistentJob" },
-        },
-      },
-    },
+		{
+			Name: "BadDependency",
+			Jobs: []*Job{
+				{
+					Name:              "BadDependency",
+					State:             NotStarted,
+					DependentJobNames: []string{"NonExistentJob"},
+				},
+			},
+			ExpectedResults: []*Job{
+				{
+					Name:              "BadDependency",
+					State:             BadDependency,
+					DependentJobNames: []string{"NonExistentJob"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -169,150 +169,149 @@ func TestRunJob(t *testing.T) {
 }
 
 func TestGetByState(t *testing.T) {
-  a := &Action{
-    Matrix: []*Job{
-      {
-        Name: "Ready",
-        State: Ready,
-      },
-      {
-        Name: "Failed",
-        State: Failed,
-      },
-    },
-  }
-  expected := []*Job{
-    {
-      Name: "Ready",
-      State: Ready,
-    },
-  }
+	a := &Action{
+		Matrix: []*Job{
+			{
+				Name:  "Ready",
+				State: Ready,
+			},
+			{
+				Name:  "Failed",
+				State: Failed,
+			},
+		},
+	}
+	expected := []*Job{
+		{
+			Name:  "Ready",
+			State: Ready,
+		},
+	}
 
-  actual := a.GetJobByState(Ready)
+	actual := a.GetJobByState(Ready)
 
-  assert.EqualValues(t, expected, actual)
+	assert.EqualValues(t, expected, actual)
 }
 
 func TestSendJobsForRun(t *testing.T) {
-  readyJob := &Job{
-    Name: "Ready",
-    State: Ready,
-  }
-  queuedJob := &Job{
-    Name: "Queued",
-    State: Queued,
-  }
-  a := &Action{
-    Matrix: []*Job{
-      readyJob,
-      queuedJob,
-    },
-    runChannel: make(chan *Job, 2),
-  }
-  expected := &Job{
-    Name: "Ready",
-    State: Queued,
-  }
+	readyJob := &Job{
+		Name:  "Ready",
+		State: Ready,
+	}
+	queuedJob := &Job{
+		Name:  "Queued",
+		State: Queued,
+	}
+	a := &Action{
+		Matrix: []*Job{
+			readyJob,
+			queuedJob,
+		},
+		runChannel: make(chan *Job, 2),
+	}
+	expected := &Job{
+		Name:  "Ready",
+		State: Queued,
+	}
 
-  a.SendJobsForRun()
+	a.SendJobsForRun()
 
-  var actual *Job
+	var actual *Job
 
-  select {
-  case actual = <- a.runChannel:
-    assert.EqualValues(t, expected, actual, "expected value was not sent on channel")
-  case <- time.After(5 * time.Second):
-    t.Log("expected value not received in a timely manner")
-    t.Fail()
-  }
+	select {
+	case actual = <-a.runChannel:
+		assert.EqualValues(t, expected, actual, "expected value was not sent on channel")
+	case <-time.After(5 * time.Second):
+		t.Log("expected value not received in a timely manner")
+		t.Fail()
+	}
 }
 
 func TestGetJobCountByState(t *testing.T) {
-  a := &Action{
-    Matrix: []*Job{
-      {
-        Name: "Ready",
-        State: Ready,
-      },
-      {
-        Name: "Queued",
-        State: Queued,
-      },
-      {
-        Name: "NotStarted",
-        State: NotStarted,
-      },
-    },
-  }
-  expectedResults := map[JobState]int{
-    NotStarted: 1,
-    Ready: 1,
-    Queued: 1,
-  }
+	a := &Action{
+		Matrix: []*Job{
+			{
+				Name:  "Ready",
+				State: Ready,
+			},
+			{
+				Name:  "Queued",
+				State: Queued,
+			},
+			{
+				Name:  "NotStarted",
+				State: NotStarted,
+			},
+		},
+	}
+	expectedResults := map[JobState]int{
+		NotStarted: 1,
+		Ready:      1,
+		Queued:     1,
+	}
 
-  actualResults := a.GetJobCountByState()
+	actualResults := a.GetJobCountByState()
 
-  assert.Equal(t, expectedResults, actualResults)
+	assert.Equal(t, expectedResults, actualResults)
 }
 
 func TestErrors(t *testing.T) {
-  testCases := []struct{
-    Name string
-    Matrix []*Job
-    ExpectedError *multierror.Error
-  }{
-    {
-      Name: "WithErrors",
-      ExpectedError: &multierror.Error{
-        Errors: []error{
-          fmt.Errorf("error running job with name JobWithError: %w", errors.New("an error")),
-          fmt.Errorf("error running job with name AnotherJobWithError: %w", errors.New("another error")),
-        },
-      },
-      Matrix: []*Job{
-        {
-          Name: "JobWithError",
-          Error: errors.New("an error"),
-        },
-        {
-          Name: "AnotherJobWithError",
-          Error: errors.New("another error"),
-        },
-      },
-    },
-    {
-      Name: "NoErrors",
-      ExpectedError: nil,
-      Matrix: []*Job{
-        {
-          Name: "JobWithError",
-          Error: nil,
-        },
-        {
-          Name: "AnotherJobWithError",
-          Error: nil,
-        },
-      },
-    },
-  }
-  for _, tc := range testCases {
-    tc := tc
-    t.Run(tc.Name, func(t *testing.T) {
-      t.Parallel()
+	testCases := []struct {
+		Name          string
+		Matrix        []*Job
+		ExpectedError *multierror.Error
+	}{
+		{
+			Name: "WithErrors",
+			ExpectedError: &multierror.Error{
+				Errors: []error{
+					fmt.Errorf("error running job with name JobWithError: %w", errors.New("an error")),
+					fmt.Errorf("error running job with name AnotherJobWithError: %w", errors.New("another error")),
+				},
+			},
+			Matrix: []*Job{
+				{
+					Name:  "JobWithError",
+					Error: errors.New("an error"),
+				},
+				{
+					Name:  "AnotherJobWithError",
+					Error: errors.New("another error"),
+				},
+			},
+		},
+		{
+			Name:          "NoErrors",
+			ExpectedError: nil,
+			Matrix: []*Job{
+				{
+					Name:  "JobWithError",
+					Error: nil,
+				},
+				{
+					Name:  "AnotherJobWithError",
+					Error: nil,
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 
-      a := &Action{
-        Matrix: tc.Matrix,
-      }
+			a := &Action{
+				Matrix: tc.Matrix,
+			}
 
-      actualError := a.error()
+			actualError := a.error()
 
-      if tc.ExpectedError != nil {
-        assert.Equal(t, tc.ExpectedError, actualError, "actual and expected error are different")
-      } else {
-        assert.Nil(t, actualError, "actual error was not expected nil")
-      }
-    })
-  }
-
+			if tc.ExpectedError != nil {
+				assert.Equal(t, tc.ExpectedError, actualError, "actual and expected error are different")
+			} else {
+				assert.Nil(t, actualError, "actual error was not expected nil")
+			}
+		})
+	}
 
 }

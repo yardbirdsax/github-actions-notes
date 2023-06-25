@@ -10,8 +10,8 @@ type WorkflowRunner interface {
 }
 
 // This is just a wrapper around github.com/yardbirdsax/go-ghworkflow's WorkflowRun
-type WorkflowRun struct {}
+type WorkflowRun struct{}
 
 func (w *WorkflowRun) Run(path string, inputs map[string]interface{}) *ghworkflow.WorkflowRun {
-  return ghworkflow.Run(path, ghworkflow.WithInputs(inputs)).Wait()
+	return ghworkflow.Run(path, ghworkflow.WithInputs(inputs)).Wait()
 }
